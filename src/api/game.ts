@@ -60,7 +60,7 @@ export class Game {
         }
     }
 
-    #onInput = (input: Input) => {
-        this.#player.handleInput(input)
+    #onInput = (input: Input, active: boolean) => {
+        this.#player.handleInput(input, active)
     }
 }

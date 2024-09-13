@@ -1,15 +1,26 @@
 export enum Input {
-    moveUpActivate = 'move up activate',
-    moveUpDeactivate = 'move up deactivate',
-    moveRightActivate = 'move right activate',
-    moveRightDeactivate = 'move right deactivate',
-    moveDownActivate = 'move down activate',
-    moveDownDeactivate = 'move down deactivate',
-    moveLeftActivate = 'move left activate',
-    moveLeftDeactivate = 'move left deactivate',
+    moveUp = 'move up',
+    moveRight = 'move right',
+    moveDown = 'move down',
+    moveLeft = 'move left',
 }
 
-export type InputCallback = (input: Input) => void
+function inputFromKeyCode(keyCode: string): Input | null {
+    switch (keyCode) {
+        case 'ArrowUp':
+            return Input.moveUp
+        case 'ArrowRight':
+            return Input.moveRight
+        case 'ArrowDown':
+            return Input.moveDown
+        case 'ArrowLeft':
+            return Input.moveLeft
+        default:
+            return null
+    }
+}
+
+export type InputCallback = (input: Input, active: boolean) => void
 
 export class InputProcessor {
     readonly #onPlayerInput: InputCallback
@@ -28,37 +39,14 @@ export class InputProcessor {
         document.removeEventListener('keydown', this.#onKeyDown)
     }
 
-    #onKeyUp = (e: KeyboardEvent) => {
-        switch (e.code) {
-            case 'ArrowUp':
-                this.#onPlayerInput(Input.moveUpDeactivate)
-                break
-            case 'ArrowRight':
-                this.#onPlayerInput(Input.moveRightDeactivate)
-                break
-            case 'ArrowDown':
-                this.#onPlayerInput(Input.moveDownDeactivate)
-                break
-            case 'ArrowLeft':
-                this.#onPlayerInput(Input.moveLeftDeactivate)
-                break
-        }
-    }
+    #onKeyUp = (e: KeyboardEvent) => this.#onKeyEvent(e.code, false)
 
-    #onKeyDown = (e: KeyboardEvent) => {
-        switch (e.code) {
-            case 'ArrowUp':
-                this.#onPlayerInput(Input.moveUpActivate)
-                break
-            case 'ArrowRight':
-                this.#onPlayerInput(Input.moveRightActivate)
-                break
-            case 'ArrowDown':
-                this.#onPlayerInput(Input.moveDownActivate)
-                break
-            case 'ArrowLeft':
-                this.#onPlayerInput(Input.moveLeftActivate)
-                break
+    #onKeyDown = (e: KeyboardEvent) => this.#onKeyEvent(e.code, true)
+
+    #onKeyEvent(keyCode: string, active: boolean) {
+        const gameInput = inputFromKeyCode(keyCode)
+        if (gameInput) {
+            this.#onPlayerInput(gameInput, active)
         }
     }
 }

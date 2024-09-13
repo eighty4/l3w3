@@ -11,13 +11,6 @@ export class DrawContext {
         this.#calcCoordinateScaling()
     }
 
-    #calcCoordinateScaling = () => {
-        this.#canvasCtx.reset()
-        const clientRect = this.#canvas.getBoundingClientRect()
-        this.#canvas.width = clientRect.width
-        this.#canvas.height = clientRect.height
-    }
-
     clear() {
         this.#canvasCtx.reset()
     }
@@ -31,11 +24,22 @@ export class DrawContext {
         return {w: this.width, h: this.height}
     }
 
+    get ctx(): CanvasRenderingContext2D {
+        return this.#canvasCtx
+    }
+
     get width(): number {
         return this.#canvas.width
     }
 
     get height(): number {
         return this.#canvas.height
+    }
+
+    #calcCoordinateScaling = () => {
+        this.#canvasCtx.reset()
+        const clientRect = this.#canvas.getBoundingClientRect()
+        this.#canvas.width = clientRect.width
+        this.#canvas.height = clientRect.height
     }
 }
