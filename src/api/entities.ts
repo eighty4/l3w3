@@ -36,7 +36,9 @@ export class Player implements Entity {
     constructor(canvasSize: CanvasSize) {
         this.#x = (canvasSize.w / 2) - (this.#w / 2)
         this.#y = (canvasSize.h / 2) - (this.#h / 2)
-        this.#img.src = '/sprites/player_character.png'
+        this.#img.src = import.meta.env.BASE_URL === '/'
+            ? '/sprites/player_character.png'
+            : import.meta.env.BASE_URL + '/sprites/player_character.png'
     }
 
     handleInput(input: Input, active: boolean) {
