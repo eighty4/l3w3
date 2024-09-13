@@ -1,0 +1,45 @@
+name: verify
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency: verify-ci
+
+jobs:
+
+  verified:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - typecheck
+    steps:
+      - run: echo "Gyork! Gyork! Gyork!"
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: verify
+        run: |
+          corepack enable && corepack prepare pnpm@latest --activate
+          pnpm i
+          pnpm exec vite build
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: verify
+        run: |
+          corepack enable && corepack prepare pnpm@latest --activate
+          pnpm i
+          pnpm exec tsc
