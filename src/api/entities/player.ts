@@ -1,87 +1,29 @@
-import type {DrawContext} from './drawing.ts'
-import type {GameObserver} from './game.ts'
-import {doRectsIntersect, getRectCenter, moveRectTowardsPoint, type Rect, type Size} from './geometry.ts'
-import {Input} from './input.ts'
+import {Direction} from './direction.ts'
+import {type DrawContext, ImageResource} from '../drawing.ts'
+import type {Rect, Size} from '../geometry.ts'
+import type {Entity} from './entity.ts'
+import {Input} from '../input.ts'
 
 const SPEED_PPS = 15
 const STRIDE_MS = 350
 
-enum Direction {
-    upLeft,
-    up,
-    upRight,
-    right,
-    downRight,
-    down,
-    downLeft,
-    left,
-}
-
-export interface Entity {
-    draw(drawing: DrawContext): void
-
-    get rect(): Rect
-
-    update(elapsedTime: number, canvasSize: Size): void
-}
-
-export class BadGuy implements Entity {
-    #rect: Rect = {
-        x: 0,
-        y: 0,
-        w: 60,
-        h: 120,
-    }
-    #img: HTMLImageElement = new Image()
-    #obs: GameObserver
-    #player: Player
-
-    constructor(canvasSize: Size, player: Player, obs: GameObserver) {
-        this.#obs = obs
-        this.#player = player
-        this.#rect.x = canvasSize.w - (canvasSize.w / 6) - (this.#rect.w / 2)
-        this.#rect.y = (canvasSize.h / 2) - (this.#rect.h / 2)
-        this.#img.src = import.meta.env.BASE_URL === '/'
-            ? '/sprites/player_character.png'
-            : import.meta.env.BASE_URL + '/sprites/player_character.png'
-    }
-
-    draw(drawing: DrawContext): void {
-        drawing.ctx.drawImage(this.#img, 10 * 17, 0, 15, 24, this.#rect.x, this.#rect.y, this.#rect.w, this.#rect.h)
-    }
-
-    get rect(): Rect {
-        return this.#rect
-    }
-
-    update(elapsedTime: number, _canvasSize: Size): void {
-        moveRectTowardsPoint(this.#rect, getRectCenter(this.#player.rect), SPEED_PPS / (elapsedTime * .1))
-        if (doRectsIntersect(this.#rect, this.#player.rect)) {
-            this.#obs.onPlayerPulverizedIntoPulpyPuddles()
-        }
-    }
-}
-
 export class Player implements Entity {
-    #rect: Rect = {
+    readonly #img: CanvasImageSource = ImageResource.playerCharacter()
+    readonly #rect: Rect = {
         w: 30,
         h: 60,
         x: 0,
         y: 0,
     }
-    #state: PlayerState = new StillState()
-    #direction: Direction = Direction.down
     #altStep: boolean = false
     #altStepWhen: number = 0
+    #direction: Direction = Direction.down
     #moving: boolean = false
-    #img: HTMLImageElement = new Image()
+    #state: PlayerState = new StillState()
 
     constructor(Size: Size) {
         this.#rect.x = (Size.w / 2) - (this.#rect.w / 2)
         this.#rect.y = (Size.h / 2) - (this.#rect.h / 2)
-        this.#img.src = import.meta.env.BASE_URL === '/'
-            ? '/sprites/player_character.png'
-            : import.meta.env.BASE_URL + '/sprites/player_character.png'
     }
 
     handleInput(input: Input, active: boolean) {
@@ -150,8 +92,8 @@ export class Player implements Entity {
     }
 
     draw(drawing: DrawContext) {
-        // drawing.drawRect('orange', this.x, this.y, this.w, this.h)
-        drawing.ctx.drawImage(this.#img, this.#spriteIndex() * 17, 0, 15, 24, this.#rect.x, this.#rect.y, this.#rect.w, this.#rect.h)
+        // drawing.drawRect('orange', this.#rect)
+        drawing.drawImage(this.#img, this.#spriteIndex() * 17, 0, 15, 24, this.#rect)
     }
 
     moveInDirection(direction: Direction) {

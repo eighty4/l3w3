@@ -1,4 +1,22 @@
-import type {Size} from './geometry.ts'
+import type {Rect, Size} from './geometry.ts'
+
+const IMG_URL_BASE = import.meta.env.BASE_URL === '/' ? '/img/' : import.meta.env.BASE_URL + '/img/'
+
+export class ImageResource {
+    static lambda(): CanvasImageSource {
+        return this.#loadImage('lambda.png')
+    }
+
+    static playerCharacter(): CanvasImageSource {
+        return this.#loadImage('player_character.png')
+    }
+
+    static #loadImage(subpath: string): CanvasImageSource {
+        const img = new Image() as HTMLImageElement
+        img.src = IMG_URL_BASE + subpath
+        return img
+    }
+}
 
 export class DrawContext {
     readonly #canvas: HTMLCanvasElement
@@ -15,9 +33,13 @@ export class DrawContext {
         this.#canvasCtx.reset()
     }
 
-    drawRect(color: string, x: number, y: number, w: number, h: number) {
+    drawImage(img: CanvasImageSource, sx: number, sy: number, sw: number, sh: number, d: Rect) {
+        this.#canvasCtx.drawImage(img, sx, sy, sw, sh, d.x, d.y, d.w, d.h)
+    }
+
+    drawRect(color: string, d: Rect) {
         this.#canvasCtx.fillStyle = color
-        this.#canvasCtx.fillRect(x, y, w, h)
+        this.#canvasCtx.fillRect(d.x, d.y, d.w, d.h)
     }
 
     get size(): Size {

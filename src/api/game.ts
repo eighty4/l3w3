@@ -1,6 +1,8 @@
 import {DrawContext} from './drawing.ts'
-import {BadGuy, type Entity, Player} from './entities.ts'
 import {type Input, InputProcessor} from './input.ts'
+import type {Entity} from './entities/entity.ts'
+import {Player} from './entities/player.ts'
+import {Monster} from './entities/monster.ts'
 
 const GAME_PAUSED = -1
 
@@ -19,7 +21,7 @@ export class Game implements GameObserver {
     constructor(canvas: HTMLCanvasElement) {
         this.#drawing = new DrawContext(canvas)
         this.#entities.push(this.#player = new Player(this.#drawing.size))
-        this.#entities.push(new BadGuy(this.#drawing.size, this.#player, this))
+        this.#entities.push(new Monster(this.#drawing.size, this.#player, this))
         this.#input = new InputProcessor(this.#onInput)
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
