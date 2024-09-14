@@ -1,4 +1,6 @@
-import type {CanvasSize, DrawContext} from './drawing.ts'
+import type {DrawContext} from './drawing.ts'
+import type {GameObserver} from './game.ts'
+import {doRectsIntersect, getRectCenter, moveRectTowardsPoint, type Rect, type Size} from './geometry.ts'
 import {Input} from './input.ts'
 
 const SPEED_PPS = 15
@@ -18,24 +20,65 @@ enum Direction {
 export interface Entity {
     draw(drawing: DrawContext): void
 
-    update(elapsedTime: number, canvasSize: { w: number, h: number }): void
+    get rect(): Rect
+
+    update(elapsedTime: number, canvasSize: Size): void
+}
+
+export class BadGuy implements Entity {
+    #rect: Rect = {
+        x: 0,
+        y: 0,
+        w: 60,
+        h: 120,
+    }
+    #img: HTMLImageElement = new Image()
+    #obs: GameObserver
+    #player: Player
+
+    constructor(canvasSize: Size, player: Player, obs: GameObserver) {
+        this.#obs = obs
+        this.#player = player
+        this.#rect.x = canvasSize.w - (canvasSize.w / 6) - (this.#rect.w / 2)
+        this.#rect.y = (canvasSize.h / 2) - (this.#rect.h / 2)
+        this.#img.src = import.meta.env.BASE_URL === '/'
+            ? '/sprites/player_character.png'
+            : import.meta.env.BASE_URL + '/sprites/player_character.png'
+    }
+
+    draw(drawing: DrawContext): void {
+        drawing.ctx.drawImage(this.#img, 10 * 17, 0, 15, 24, this.#rect.x, this.#rect.y, this.#rect.w, this.#rect.h)
+    }
+
+    get rect(): Rect {
+        return this.#rect
+    }
+
+    update(elapsedTime: number, _canvasSize: Size): void {
+        moveRectTowardsPoint(this.#rect, getRectCenter(this.#player.rect), SPEED_PPS / (elapsedTime * .1))
+        if (doRectsIntersect(this.#rect, this.#player.rect)) {
+            this.#obs.onPlayerPulverizedIntoPulpyPuddles()
+        }
+    }
 }
 
 export class Player implements Entity {
-    readonly #w: number = 30
-    readonly #h: number = 60
+    #rect: Rect = {
+        w: 30,
+        h: 60,
+        x: 0,
+        y: 0,
+    }
     #state: PlayerState = new StillState()
-    #x: number
-    #y: number
     #direction: Direction = Direction.down
     #altStep: boolean = false
     #altStepWhen: number = 0
     #moving: boolean = false
     #img: HTMLImageElement = new Image()
 
-    constructor(canvasSize: CanvasSize) {
-        this.#x = (canvasSize.w / 2) - (this.#w / 2)
-        this.#y = (canvasSize.h / 2) - (this.#h / 2)
+    constructor(Size: Size) {
+        this.#rect.x = (Size.w / 2) - (this.#rect.w / 2)
+        this.#rect.y = (Size.h / 2) - (this.#rect.h / 2)
         this.#img.src = import.meta.env.BASE_URL === '/'
             ? '/sprites/player_character.png'
             : import.meta.env.BASE_URL + '/sprites/player_character.png'
@@ -49,53 +92,57 @@ export class Player implements Entity {
         }
     }
 
-    update(elapsedTime: number, canvasSize: CanvasSize) {
+    get rect(): Rect {
+        return this.#rect
+    }
+
+    update(elapsedTime: number, Size: Size) {
         if (this.#moving) {
             const moveDistance = SPEED_PPS / (elapsedTime * .1)
             switch (this.#direction) {
                 case Direction.upLeft:
-                    this.#y -= moveDistance
-                    this.#x -= moveDistance
+                    this.#rect.y -= moveDistance
+                    this.#rect.x -= moveDistance
                     break
                 case Direction.up:
-                    this.#y -= moveDistance
+                    this.#rect.y -= moveDistance
                     break
                 case Direction.upRight:
-                    this.#y -= moveDistance
-                    this.#x += moveDistance
+                    this.#rect.y -= moveDistance
+                    this.#rect.x += moveDistance
                     break
                 case Direction.right:
-                    this.#x += moveDistance
+                    this.#rect.x += moveDistance
                     break
                 case Direction.downRight:
-                    this.#y += moveDistance
-                    this.#x += moveDistance
+                    this.#rect.y += moveDistance
+                    this.#rect.x += moveDistance
                     break
                 case Direction.down:
-                    this.#y += moveDistance
+                    this.#rect.y += moveDistance
                     break
                 case Direction.downLeft:
-                    this.#y += moveDistance
-                    this.#x -= moveDistance
+                    this.#rect.y += moveDistance
+                    this.#rect.x -= moveDistance
                     break
                 case Direction.left:
-                    this.#x -= moveDistance
+                    this.#rect.x -= moveDistance
                     break
             }
-            if (this.#x < 0) {
-                this.#x = 0
+            if (this.#rect.x < 0) {
+                this.#rect.x = 0
             } else {
-                const maxX = canvasSize.w - this.#w
-                if (this.#x > maxX) {
-                    this.#x = maxX
+                const maxX = Size.w - this.#rect.w
+                if (this.#rect.x > maxX) {
+                    this.#rect.x = maxX
                 }
             }
-            if (this.#y < 0) {
-                this.#y = 0
+            if (this.#rect.y < 0) {
+                this.#rect.y = 0
             } else {
-                const maxY = canvasSize.h - this.#h
-                if (this.#y > maxY) {
-                    this.#y = maxY
+                const maxY = Size.h - this.#rect.h
+                if (this.#rect.y > maxY) {
+                    this.#rect.y = maxY
                 }
             }
             this.#calculateStride()
@@ -104,7 +151,7 @@ export class Player implements Entity {
 
     draw(drawing: DrawContext) {
         // drawing.drawRect('orange', this.x, this.y, this.w, this.h)
-        drawing.ctx.drawImage(this.#img, this.#spriteIndex() * 17, 0, 15, 24, this.#x, this.#y, this.#w, this.#h)
+        drawing.ctx.drawImage(this.#img, this.#spriteIndex() * 17, 0, 15, 24, this.#rect.x, this.#rect.y, this.#rect.w, this.#rect.h)
     }
 
     moveInDirection(direction: Direction) {

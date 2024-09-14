@@ -11,3 +11,21 @@ html, body, canvas {
 html {
     background: #111;
 }
+
+#game-over {
+    background: red;
+    color: #111111;
+    font-size: 15vmin;
+    font-family: sans-serif;
+    text-align: center;
+    padding: 3rem;
+    margin: 15vmin auto 0;
+
+    & button {
+        background: green;
+        border: none;
+        color: #eee;
+        margin-top: 2rem;
+        padding: 1rem 2rem;
+    }
+}

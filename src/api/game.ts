@@ -1,10 +1,14 @@
-import {type Entity, Player} from './entities.ts'
 import {DrawContext} from './drawing.ts'
+import {BadGuy, type Entity, Player} from './entities.ts'
 import {type Input, InputProcessor} from './input.ts'
 
 const GAME_PAUSED = -1
 
-export class Game {
+export interface GameObserver {
+    onPlayerPulverizedIntoPulpyPuddles(): void
+}
+
+export class Game implements GameObserver {
     readonly #drawing: DrawContext
     readonly #entities: Array<Entity> = []
     readonly #input: InputProcessor
@@ -14,13 +18,14 @@ export class Game {
 
     constructor(canvas: HTMLCanvasElement) {
         this.#drawing = new DrawContext(canvas)
-        this.#entities.push(this.#player = new Player(this.#drawing.canvasSize))
+        this.#entities.push(this.#player = new Player(this.#drawing.size))
+        this.#entities.push(new BadGuy(this.#drawing.size, this.#player, this))
         this.#input = new InputProcessor(this.#onInput)
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 this.start()
             } else {
-                this.pause()
+                this.#pause()
             }
         })
     }
@@ -32,10 +37,18 @@ export class Game {
         }
     }
 
-    pause() {
+    #pause() {
         clearInterval(this.#loopId)
         this.#input.unbind()
         this.#loopId = GAME_PAUSED
+    }
+
+    onPlayerPulverizedIntoPulpyPuddles() {
+        this.#entities.splice(this.#entities.indexOf(this.#player), 1)
+        const dialog = document.getElementById('game-over') as HTMLDialogElement
+        dialog.showModal()
+        dialog.querySelector('button')!.addEventListener('click', () => location.reload())
+        this.#pause()
     }
 
     #gameUpdate = () => {
@@ -47,7 +60,7 @@ export class Game {
     }
 
     #updateEntities(elapsedTime: number) {
-        const canvasSize = this.#drawing.canvasSize
+        const canvasSize = this.#drawing.size
         for (const entity of this.#entities) {
             entity.update(elapsedTime, canvasSize)
         }

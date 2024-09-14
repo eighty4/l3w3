@@ -1,4 +1,4 @@
-export type CanvasSize = { w: number, h: number }
+import type {Size} from './geometry.ts'
 
 export class DrawContext {
     readonly #canvas: HTMLCanvasElement
@@ -20,7 +20,7 @@ export class DrawContext {
         this.#canvasCtx.fillRect(x, y, w, h)
     }
 
-    get canvasSize(): CanvasSize {
+    get size(): Size {
         return {w: this.width, h: this.height}
     }
 

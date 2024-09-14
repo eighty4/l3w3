@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_call:
 
 concurrency: verify-ci
 
@@ -14,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
+      - test
       - typecheck
     steps:
       - run: echo "Gyork! Gyork! Gyork!"
@@ -25,11 +27,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: verify
+      - name: vite build
         run: |
           corepack enable && corepack prepare pnpm@latest --activate
           pnpm i
           pnpm exec vite build
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: vitest
+        run: |
+          corepack enable && corepack prepare pnpm@latest --activate
+          pnpm i
+          pnpm exec vitest run
 
   typecheck:
     runs-on: ubuntu-latest
@@ -38,7 +53,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: verify
+      - name: tsc
         run: |
           corepack enable && corepack prepare pnpm@latest --activate
           pnpm i
