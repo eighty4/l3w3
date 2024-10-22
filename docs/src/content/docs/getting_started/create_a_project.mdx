@@ -1,0 +1,14 @@
+---
+title: Creating a project
+---
+
+import {Code} from '@astrojs/starlight/components'
+
+<Code code="l3 init" lang="sh"/>
+
+`l3 init` generates a `./routes` directory in your project and a Hello World source file at `./routes/lambda.mjs`. The Hello World looks like this:
+
+<Code code="export function GET() {}" lang="jh" title="./routes/lambda.mjs"/>
+
+Lambdas are deployed to AWS Lambda and API Gateway with file-based routing.
+Deploying your new project as it was generated will create a route and integration in API Gateway for a `GET /` request.

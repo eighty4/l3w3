@@ -1,0 +1,56 @@
+---
+title: Environment Variables
+description: A guide in my new Starlight docs site.
+---
+
+
+
+
+import {Aside, Code, FileTree} from '@astrojs/starlight/components'
+
+<Aside type="caution" title="Env vars are unencrypted in transit">
+    Encrypting environment variables in transit with AWS KMS is a pending feature.
+
+    In the meantime, any AWS account with access to Lambda services will have visibility to these variables.
+</Aside>
+
+Environment variables are configured alongside the Lambda sources in the project's route directory.
+An `.env` file will be deployed to any Lambdas at the HTTP path they accompany.
+Environment variables can be scoped to a Lambda's HTTP method with a `delete.env`, `get.env`, `patch.env`, `post.env` or `put.env` file.
+
+Environment variables for a specific Lambda configured by HTTP method (such as `get.env`) will override variables from that route directory's `.env` file.
+
+<Aside type="note">
+    `.env` variables are scoped only to the Lambdas at their HTTP route.
+
+    `./routes/data/.env` variables will not be shared with Lambdas in other route directories.
+</Aside>
+
+Here is a project with a `lambda.mjs` with Lambdas for `GET /data` and `POST /data`:
+
+<Code title="lambda.mjs" code={`export function GET() {\n    console.log(process.env.FOOD)\n}\n\nexport function POST() {\n    console.log(process.env.FOOD)\n}`}/>
+
+The project structure looks like this:
+
+<FileTree>
+    - routes
+        - data
+            - lambda.mjs
+            - .env
+            - get.env
+    - package.json
+</FileTree>
+
+The `GET /data` Lambda will be deployed with environment variables from `get.env` and `.env`. The `POST /data` Lambda will be deployed with the variables from `.env`.
+
+Given these `.env` file contents:
+
+<Code code={`SNACK=fries\nLOCALE=en-us`} title=".env"/>
+
+<Code code={`SNACK=chips\nLOCALE=en-gb`} title="get.env"/>
+
+The Lambdas would be deployed with these environment variables:
+
+<Code code={`SNACK=chips\nLOCALE=en-gb`} title="GET /data"/>
+
+<Code code={`SNACK=fries\nLOCALE=en-us`} title="POST /data"/>

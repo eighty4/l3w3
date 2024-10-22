@@ -1,0 +1,31 @@
+---
+title: Production builds
+---
+
+
+
+
+import {Aside, Code} from '@astrojs/starlight/components'
+
+<Aside type="caution" title="Coming soon!">
+    Production builds is a pending feature.
+</Aside>
+
+## Compiler builds
+
+`l3` optimizes production deployments of Lambda functions by minifying code with the [Speedy Web Compiler](https://swc.rs).
+
+## Optimization warnings
+
+Low import specificity affects startup performance for the Node.js runtime.
+Top-level and wildcard imports cause slower startups for Node.js runtimes.
+
+These import patterns should be avoided:
+
+<Code code={`import {* as AWS} from "aws-sdk"\nimport AWS from "aws-sdk"`} lang="js" title="bad.js"/>
+
+Imports like these produce warnings during the development process with `l3`.
+
+## Further reading
+
+- [Read more at the AWS Compute Blog](https://aws.amazon.com/blogs/compute/optimizing-node-js-dependencies-in-aws-lambda/) about how these optimizations improve cold start time by 70%.
